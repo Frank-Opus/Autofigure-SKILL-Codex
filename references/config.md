@@ -9,29 +9,33 @@
 
 ## Two Different Operating Modes
 
+### Full AutoFigure Mode
+
+This is the recommended mode when the user wants the original project behavior or the best result.
+
+- Preserves the original upstream pipeline.
+- Requires external services and model access.
+- Produces the closest result to the AutoFigure paper/project behavior.
+
+Required:
+
+- LLM provider for figure and SVG generation
+- `OPENROUTER_API_KEY`
+- `BIANXIE_API_KEY`
+- `GEMINI_API_KEY`
+- Background removal and SAM
+- `HF_TOKEN` for gated `briaai/RMBG-2.0`
+- `ROBOFLOW_API_KEY` or `FAL_KEY` for API-based SAM
+
 ### Codex-Native Mode
 
-This is the default mode for the skill.
+This is the fallback mode.
 
 - Codex reads the method text directly.
 - Codex writes editable SVG directly.
 - No external LLM provider key is required.
-- Use the local web UI only as an editor or preview surface.
-
-### Upstream AutoFigure Mode
-
-This reproduces the original repo pipeline and does require credentials.
-
-You need secrets for two separate layers:
-
-1. LLM provider for figure and SVG generation
-- `OPENROUTER_API_KEY`
-- `BIANXIE_API_KEY`
-- `GEMINI_API_KEY`
-
-2. Background removal and SAM
-- `HF_TOKEN` for gated `briaai/RMBG-2.0`
-- `ROBOFLOW_API_KEY` or `FAL_KEY` for API-based SAM
+- Use the local web UI as an editor or preview surface.
+- This is useful, but it is not a full reproduction of the upstream AutoFigure stack.
 
 ## Provider Mapping
 
@@ -43,20 +47,19 @@ The helper CLI script maps those env vars into the repo's `--api_key` flag autom
 
 ## Recommended Defaults
 
+For Full AutoFigure mode:
+
+- preserve all original major stages
+- use real provider credentials
+- use `--sam_backend roboflow` unless the user wants `fal`
+- keep `--optimize_iterations 0` only if speed matters more than iterative refinement
+
 For Codex-native mode:
 
 - Draft SVG directly instead of generating a PNG first
 - Keep text as `<text>`
 - Use semantic groups and ids
 - Validate syntax locally before handing off to the editor
-
-For upstream mode:
-
-- `--sam_backend roboflow`
-- `--optimize_iterations 0`
-- `--placeholder_mode label`
-
-These defaults reduce moving parts and match the current host constraints.
 
 ## Important Constraint
 

@@ -23,19 +23,25 @@ echo
 echo "mode-status:"
 echo "  codex_native=ready"
 if [ -n "${HF_TOKEN:-}" ]; then
-  echo "  upstream_rmbg=ready"
+  echo "  full_pipeline_rmbg=ready"
 else
-  echo "  upstream_rmbg=missing HF_TOKEN"
+  echo "  full_pipeline_rmbg=missing HF_TOKEN"
 fi
 if [ -n "${ROBOFLOW_API_KEY:-}" ] || [ -n "${FAL_KEY:-}" ]; then
-  echo "  upstream_sam=ready"
+  echo "  full_pipeline_sam=ready"
 else
-  echo "  upstream_sam=missing ROBOFLOW_API_KEY or FAL_KEY"
+  echo "  full_pipeline_sam=missing ROBOFLOW_API_KEY or FAL_KEY"
 fi
 if [ -n "${OPENROUTER_API_KEY:-}" ] || [ -n "${BIANXIE_API_KEY:-}" ] || [ -n "${GEMINI_API_KEY:-}" ]; then
-  echo "  upstream_llm=ready"
+  echo "  full_pipeline_llm=ready"
 else
-  echo "  upstream_llm=missing provider key"
+  echo "  full_pipeline_llm=missing provider key"
+fi
+
+if [ -n "${HF_TOKEN:-}" ] && { [ -n "${ROBOFLOW_API_KEY:-}" ] || [ -n "${FAL_KEY:-}" ]; } && { [ -n "${OPENROUTER_API_KEY:-}" ] || [ -n "${BIANXIE_API_KEY:-}" ] || [ -n "${GEMINI_API_KEY:-}" ]; }; then
+  echo "  full_pipeline=ready"
+else
+  echo "  full_pipeline=blocked"
 fi
 
 echo

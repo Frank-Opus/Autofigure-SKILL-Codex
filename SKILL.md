@@ -1,6 +1,6 @@
 ---
 name: autofigure-edit
-description: Codex-first workflow for turning paper method text or existing figures into editable SVG scientific figures with the local AutoFigure-Edit repo. Use when the user wants AutoFigure-Edit installed, wants the local SVG editor/UI started, or wants Codex to directly draft or refine scientific SVG diagrams. Only use the upstream API-driven pipeline when the user explicitly asks to reproduce the original AutoFigure generation flow or style transfer.
+description: Full AutoFigure-Edit workflow for turning paper method text, PDFs, reference figures, and descriptions into editable scientific figures. Use when the user wants the local AutoFigure-Edit repo installed, wants the full upstream AutoFigure pipeline preserved, or wants Codex to orchestrate method extraction, SVG refinement, editor use, and optional fallback direct SVG drafting. For best results, preserve the original API-driven image generation, SAM segmentation, RMBG background removal, SVG validation, and iterative optimization pipeline.
 ---
 
 # AutoFigure Edit
@@ -13,27 +13,74 @@ Use this skill only for the `ResearAI/AutoFigure-Edit` workflow on this machine.
 - Default Python: `/home/wanguancheng/AutoFigure-Edit/.venv/bin/python`
 - Override the repo path with `AUTOFIGURE_EDIT_REPO=/abs/path/to/AutoFigure-Edit`
 
-## Default Mode
+## Priority Order
 
-Default to a Codex-native workflow.
+When the user asks for "AutoFigure", "完整流程", "最好的结果", "不要省略", or wants style transfer / segmentation / original paper behavior:
 
-- Read the user's method text directly.
-- Draft an editable SVG yourself.
-- Validate it locally.
-- Use the bundled web editor only for preview or manual refinement.
+1. Use **Full AutoFigure Mode** first.
+2. Use **Hybrid Mode** if Codex should help with extraction, review, or SVG correction around the upstream pipeline.
+3. Use **Codex-Native Mode** only as a fallback when the user does not have the required keys or explicitly wants direct SVG authoring without the upstream generation stack.
 
-Do not request `OPENROUTER_API_KEY`, `BIANXIE_API_KEY`, or `GEMINI_API_KEY` unless the user explicitly asks for the original upstream AutoFigure multimodal generation pipeline.
+Do not silently downgrade a request for AutoFigure into a Codex-only SVG workflow.
 
 ## Modes
 
-### 1. Codex-Native SVG Authoring
+### 1. Full AutoFigure Mode
 
-Use this by default.
+This is the canonical mode for best quality and for faithful reproduction of the original project.
 
-- Input: method text, optional reference SVG or raster figure.
-- Output: editable `draft.svg` or `final.svg`.
-- No external LLM API required.
-- Preferred for most "帮我画论文方法图" or "把这段方法写成 SVG 图" requests.
+- Input:
+  - paper PDF / markdown / method text
+  - optional reference image
+  - optional text instruction
+- Pipeline:
+  - optional method extraction
+  - LLM image generation
+  - SAM3 segmentation
+  - RMBG background removal
+  - SVG template generation
+  - SVG syntax validation and repair
+  - iterative SVG optimization
+  - final assembled SVG
+- Output:
+  - editable SVG
+  - intermediate artifacts
+  - optional previews from the web UI
+
+Run:
+
+```bash
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh /path/to/method.txt /path/to/output-dir
+```
+
+Read [full-pipeline.md](/home/wanguancheng/.codex/skills/autofigure-edit/references/full-pipeline.md) before deciding to skip any stage.
+
+### 2. Hybrid Mode
+
+Use this when the full upstream pipeline should stay intact, but Codex should assist around it.
+
+Examples:
+
+- extract the method section from a PDF or markdown before calling AutoFigure
+- inspect and fix broken SVG outputs after upstream generation
+- adjust labels, colors, grouping, or layout in the generated SVG
+- open the local editor for manual refinement after the upstream run
+
+Typical hybrid flow:
+
+```bash
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh /path/to/method.txt /path/to/output-dir
+~/.codex/skills/autofigure-edit/scripts/validate_svg.py /path/to/output-dir/final.svg
+~/.codex/skills/autofigure-edit/scripts/serve.sh 8000
+```
+
+### 3. Codex-Native SVG Authoring
+
+Use this only when:
+
+- the user explicitly wants a direct SVG drafted by Codex
+- the user lacks required upstream credentials
+- the task is a lightweight redraw or edit rather than full AutoFigure generation
 
 Workflow:
 
@@ -44,7 +91,7 @@ Workflow:
 
 Read [codex-native.md](/home/wanguancheng/.codex/skills/autofigure-edit/references/codex-native.md) before drafting or refactoring SVG output.
 
-### 2. Local Editor / Refinement
+### 4. Local Editor / Refinement
 
 Use when the user already has SVG output or wants an editor opened.
 
@@ -53,23 +100,6 @@ Use when the user already has SVG output or wants an editor opened.
 ```
 
 Then work against `http://127.0.0.1:8000`.
-
-### 3. Upstream AutoFigure Reproduction
-
-Use this only when the user explicitly wants one of these:
-
-- Reproduce the original AutoFigure paper pipeline
-- Text-to-raster generation before vectorization
-- SAM3 API segmentation
-- Style transfer based on a reference image
-
-That mode uses the repo's original CLI:
-
-```bash
-~/.codex/skills/autofigure-edit/scripts/run_cli.sh /path/to/paper.txt /path/to/output-dir
-```
-
-Read [config.md](/home/wanguancheng/.codex/skills/autofigure-edit/references/config.md) before asking for credentials.
 
 ## Quick Workflow
 
@@ -85,60 +115,70 @@ Read [config.md](/home/wanguancheng/.codex/skills/autofigure-edit/references/con
 ~/.codex/skills/autofigure-edit/scripts/doctor.sh
 ```
 
-3. For Codex-native work, scaffold a job:
+3. For the full upstream pipeline, verify credentials and run:
+
+```bash
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh /path/to/method.txt /path/to/output-dir
+```
+
+4. For Codex-native fallback work, scaffold a job:
 
 ```bash
 ~/.codex/skills/autofigure-edit/scripts/new_job.sh /abs/path/job-dir
 ```
 
-4. Validate a generated SVG:
+5. Validate a generated SVG:
 
 ```bash
 ~/.codex/skills/autofigure-edit/scripts/validate_svg.py /abs/path/job-dir/draft.svg
 ```
 
-5. Start the web UI only when preview or manual editing helps:
+6. Start the web UI when preview or manual editing helps:
 
 ```bash
 ~/.codex/skills/autofigure-edit/scripts/serve.sh
 ```
 
-6. Use the upstream CLI only when explicitly requested:
-
-```bash
-~/.codex/skills/autofigure-edit/scripts/run_cli.sh /path/to/paper.txt /path/to/output-dir
-```
-
 ## Practical Rules
 
+- If the user asks for the best AutoFigure result, preserve the full upstream pipeline.
+- Do not omit SAM3, RMBG, SVG validation, or optimization unless the user explicitly accepts a degraded path.
 - Prefer producing SVG directly over producing PNG first.
 - Prefer semantic SVG elements such as `rect`, `line`, `path`, `text`, `marker`, `g`.
 - Keep labels editable as text, not outlines.
 - Keep each meaningful visual block in its own `<g id="...">`.
 - If the user gives a raster figure, use it as a visual reference for manual SVG reconstruction first.
-- Only escalate to SAM/RMBG/API mode if the user explicitly wants automated extraction or the figure is too complex for a direct Codex redraw.
+- Only fall back to Codex-native direct redraw if the user accepts not using the original generation stack or if credentials are unavailable.
 
 ## Configuration
 
 - The repo `.env` file is at `/home/wanguancheng/AutoFigure-Edit/.env`.
-- For Codex-native mode, API keys are optional.
-- `HF_TOKEN` is only needed for upstream step-3 background removal with `briaai/RMBG-2.0`.
-- One LLM key is only needed for upstream API generation:
+- For **Full AutoFigure Mode**, these are required:
+  - `HF_TOKEN`
+  - one provider key:
   - `OPENROUTER_API_KEY`
   - `BIANXIE_API_KEY`
   - `GEMINI_API_KEY`
-- One SAM backend key is only needed for upstream SAM3 API mode:
+  - one SAM backend key:
   - `ROBOFLOW_API_KEY`
   - `FAL_KEY`
+- For **Codex-Native Mode**, API keys are optional.
 
 ## Defaults For This Machine
 
-- Default to Codex-native mode.
-- Prefer `roboflow` or `fal` for `--sam_backend` only in upstream mode.
+- Default to **Full AutoFigure Mode** when the user asks for AutoFigure or best quality.
+- Prefer `roboflow` or `fal` for `--sam_backend` in upstream mode.
 - Do not default to local `sam3` here unless the user explicitly provides a separate Python 3.12+/CUDA setup for upstream SAM3.
 - Optional SVG-to-PNG helper packages are not part of the local non-root install. If a task specifically needs those previews, prefer Docker or tell the user that extra system packages are required.
 
 ## Command Patterns
+
+- Full upstream pipeline:
+
+```bash
+OPENROUTER_API_KEY=... HF_TOKEN=... ROBOFLOW_API_KEY=... \
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh ./paper.txt ./outputs/demo
+```
 
 - Codex-native job:
 
@@ -157,7 +197,7 @@ Read [config.md](/home/wanguancheng/.codex/skills/autofigure-edit/references/con
 
 ```bash
 OPENROUTER_API_KEY=... \
-~/.codex/skills/autofigure-edit/scripts/run_cli.sh paper.txt outputs/demo \
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh paper.txt outputs/demo \
   --provider openrouter \
   --sam_backend roboflow
 ```
@@ -166,7 +206,7 @@ OPENROUTER_API_KEY=... \
 
 ```bash
 GEMINI_API_KEY=... \
-~/.codex/skills/autofigure-edit/scripts/run_cli.sh paper.txt outputs/demo \
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh paper.txt outputs/demo \
   --provider gemini \
   --sam_backend roboflow
 ```
