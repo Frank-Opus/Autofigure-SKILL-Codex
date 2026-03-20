@@ -1,0 +1,7 @@
+interface:
+  display_name: "AutoFigure Edit"
+  short_description: "Codex-first scientific SVG workflow"
+  default_prompt: "Use $autofigure-edit to draft or refine an editable scientific SVG locally, and only use the upstream API pipeline if I explicitly ask for it."
+
+policy:
+  allow_implicit_invocation: true
