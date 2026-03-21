@@ -15,11 +15,11 @@ This is the recommended mode when the user wants the original project behavior o
 
 - Preserves the original upstream pipeline.
 - Requires external services and model access.
-- Produces the closest result to the AutoFigure paper/project behavior.
+- Uses a local Codex SVG backend by default for the template stage.
 
 Required:
 
-- LLM provider for figure and SVG generation
+- LLM provider for figure generation
 - `OPENROUTER_API_KEY`
 - `BIANXIE_API_KEY`
 - `GEMINI_API_KEY`
@@ -50,9 +50,10 @@ The helper CLI script maps those env vars into the repo's `--api_key` flag autom
 For Full AutoFigure mode:
 
 - preserve all original major stages
+- default `AUTOFIGURE_DEFAULT_SVG_BACKEND=codex_local`
 - use real provider credentials
 - use `--sam_backend roboflow` unless the user wants `fal`
-- keep `--optimize_iterations 0` only if speed matters more than iterative refinement
+- use `--svg_backend llm` only when the user explicitly wants the upstream multimodal SVG stage
 
 For Codex-native mode:
 

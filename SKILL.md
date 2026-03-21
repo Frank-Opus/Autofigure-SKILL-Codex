@@ -1,6 +1,6 @@
 ---
 name: autofigure-edit
-description: Full AutoFigure-Edit workflow for turning paper method text, PDFs, reference figures, and descriptions into editable scientific figures. Use when the user wants the local AutoFigure-Edit repo installed, wants the full upstream AutoFigure pipeline preserved, or wants Codex to orchestrate method extraction, SVG refinement, editor use, and optional fallback direct SVG drafting. For best results, preserve the original API-driven image generation, SAM segmentation, RMBG background removal, SVG validation, and iterative optimization pipeline.
+description: Full AutoFigure-Edit workflow for turning paper method text, PDFs, reference figures, and descriptions into editable scientific figures. Use when the user wants the local AutoFigure-Edit repo installed, wants the pipeline preserved, or wants Codex to orchestrate method extraction, local SVG generation, editor use, and optional fallback direct SVG drafting. The packaged default keeps image generation, SAM segmentation, RMBG background removal, SVG validation, and final assembly while replacing the multimodal SVG API stage with a local Codex backend.
 ---
 
 # AutoFigure Edit
@@ -27,7 +27,7 @@ Do not silently downgrade a request for AutoFigure into a Codex-only SVG workflo
 
 ### 1. Full AutoFigure Mode
 
-This is the canonical mode for best quality and for faithful reproduction of the original project.
+This is the canonical mode for the packaged skill.
 
 - Input:
   - paper PDF / markdown / method text
@@ -38,9 +38,8 @@ This is the canonical mode for best quality and for faithful reproduction of the
   - LLM image generation
   - SAM3 segmentation
   - RMBG background removal
-  - SVG template generation
-  - SVG syntax validation and repair
-  - iterative SVG optimization
+  - local Codex SVG template generation by default
+  - SVG syntax validation
   - final assembled SVG
 - Output:
   - editable SVG
@@ -141,8 +140,8 @@ Then work against `http://127.0.0.1:8000`.
 
 ## Practical Rules
 
-- If the user asks for the best AutoFigure result, preserve the full upstream pipeline.
-- Do not omit SAM3, RMBG, SVG validation, or optimization unless the user explicitly accepts a degraded path.
+- If the user asks for the best AutoFigure result, preserve the full pipeline structure.
+- Do not omit SAM3, RMBG, or SVG validation unless the user explicitly accepts a degraded path.
 - Prefer producing SVG directly over producing PNG first.
 - Prefer semantic SVG elements such as `rect`, `line`, `path`, `text`, `marker`, `g`.
 - Keep labels editable as text, not outlines.
@@ -163,10 +162,12 @@ Then work against `http://127.0.0.1:8000`.
   - `ROBOFLOW_API_KEY`
   - `FAL_KEY`
 - For **Codex-Native Mode**, API keys are optional.
+- For the packaged full pipeline, the default SVG stage is `AUTOFIGURE_DEFAULT_SVG_BACKEND=codex_local`.
 
 ## Defaults For This Machine
 
 - Default to **Full AutoFigure Mode** when the user asks for AutoFigure or best quality.
+- Default the SVG backend to `codex_local`.
 - Prefer `roboflow` or `fal` for `--sam_backend` in upstream mode.
 - Do not default to local `sam3` here unless the user explicitly provides a separate Python 3.12+/CUDA setup for upstream SAM3.
 - Optional SVG-to-PNG helper packages are not part of the local non-root install. If a task specifically needs those previews, prefer Docker or tell the user that extra system packages are required.
@@ -208,5 +209,15 @@ OPENROUTER_API_KEY=... \
 GEMINI_API_KEY=... \
 ~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh paper.txt outputs/demo \
   --provider gemini \
+  --sam_backend roboflow
+```
+
+- Force original multimodal SVG generation:
+
+```bash
+GEMINI_API_KEY=... \
+~/.codex/skills/autofigure-edit/scripts/run_full_pipeline.sh paper.txt outputs/demo \
+  --provider gemini \
+  --svg_backend llm \
   --sam_backend roboflow
 ```

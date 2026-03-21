@@ -20,6 +20,14 @@ Do not omit these stages when the user asks for the original AutoFigure behavior
 - automatic repair
 - iterative review / optimization
 
+For this packaged Codex skill:
+
+- image generation stays external
+- SAM stays external or local depending on backend
+- RMBG stays local via Hugging Face weights
+- SVG template generation defaults to a local Codex backend
+- the original multimodal SVG API stage is still available via `--svg_backend llm`
+
 In the upstream repo, this is represented by:
 - image generation
 - SVG generation

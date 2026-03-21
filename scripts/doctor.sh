@@ -22,6 +22,7 @@ fi
 echo
 echo "mode-status:"
 echo "  codex_native=ready"
+echo "  codex_svg_backend=${AUTOFIGURE_DEFAULT_SVG_BACKEND:-codex_local}"
 if [ -n "${HF_TOKEN:-}" ]; then
   echo "  full_pipeline_rmbg=ready"
 else

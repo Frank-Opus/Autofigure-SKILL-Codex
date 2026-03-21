@@ -18,11 +18,17 @@ ensure_repo_exists
 load_repo_env
 
 provider="${AUTOFIGURE_DEFAULT_PROVIDER:-gemini}"
+svg_backend="${AUTOFIGURE_DEFAULT_SVG_BACKEND:-codex_local}"
 extra_args=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --provider)
       provider="${2:-}"
+      extra_args+=("$1" "$2")
+      shift 2
+      ;;
+    --svg_backend)
+      svg_backend="${2:-}"
       extra_args+=("$1" "$2")
       shift 2
       ;;
@@ -36,10 +42,11 @@ done
 api_key="$(resolve_api_key "$provider")"
 cmd=(
   "$AUTOFIGURE_PYTHON"
-  "$AUTOFIGURE_REPO/autofigure2.py"
+  "$SCRIPT_DIR/run_codex_pipeline.py"
   --method_file "$METHOD_FILE"
   --output_dir "$OUTPUT_DIR"
   --provider "$provider"
+  --svg_backend "$svg_backend"
 )
 
 if [ -n "$api_key" ]; then
