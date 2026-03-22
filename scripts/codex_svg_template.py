@@ -53,7 +53,7 @@ class Anchor:
 
 
 SVG_NS = 'http://www.w3.org/2000/svg'
-ANCHOR_LIMIT = 17
+ANCHOR_LIMIT = 12
 
 
 def split_text(text: str, max_len: int = 18) -> List[str]:

@@ -10,7 +10,7 @@ import sys
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-ANCHOR_LIMIT = 17
+ANCHOR_LIMIT = 12
 
 
 def resolve_repo() -> Path:
@@ -313,6 +313,7 @@ def main() -> int:
         output_path=str(final_svg_path),
         scale_factors=scale_factors,
         match_by_label=(args.placeholder_mode == "label"),
+        append_unmatched=False,
     )
 
     export_previews(repo, template_svg_path)
