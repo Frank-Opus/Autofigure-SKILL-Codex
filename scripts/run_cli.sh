@@ -18,7 +18,7 @@ ensure_repo_exists
 load_repo_env
 
 provider="${AUTOFIGURE_DEFAULT_PROVIDER:-gemini}"
-svg_backend="${AUTOFIGURE_DEFAULT_SVG_BACKEND:-codex_local}"
+svg_backend="${AUTOFIGURE_DEFAULT_SVG_BACKEND:-llm}"
 extra_args=()
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -57,7 +57,8 @@ has_sam_backend=0
 has_base_url=0
 has_image_model=0
 has_svg_model=0
-has_figure_spec=0
+has_placeholder_mode=0
+has_optimize_iterations=0
 for arg in "${extra_args[@]}"; do
   if [ "$arg" = "--sam_backend" ]; then
     has_sam_backend=1
@@ -67,8 +68,10 @@ for arg in "${extra_args[@]}"; do
     has_image_model=1
   elif [ "$arg" = "--svg_model" ]; then
     has_svg_model=1
-  elif [ "$arg" = "--figure_spec_json" ]; then
-    has_figure_spec=1
+  elif [ "$arg" = "--placeholder_mode" ]; then
+    has_placeholder_mode=1
+  elif [ "$arg" = "--optimize_iterations" ]; then
+    has_optimize_iterations=1
   fi
 done
 
@@ -91,8 +94,13 @@ fi
 if [ "$has_svg_model" -eq 0 ] && [ -n "${AUTOFIGURE_DEFAULT_SVG_MODEL:-}" ]; then
   cmd+=(--svg_model "$AUTOFIGURE_DEFAULT_SVG_MODEL")
 fi
+if [ "$has_placeholder_mode" -eq 0 ]; then
+  cmd+=(--placeholder_mode label)
+fi
+if [ "$has_optimize_iterations" -eq 0 ]; then
+  cmd+=(--optimize_iterations 2)
+fi
 
-cmd+=(--placeholder_mode label --optimize_iterations 0)
 cmd+=("${extra_args[@]}")
 
 exec "${cmd[@]}"
