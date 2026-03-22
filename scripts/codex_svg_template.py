@@ -204,14 +204,26 @@ def extract_title(method_text: str) -> str:
     return line[:110] if line else "AutoFigure Codex Pipeline"
 
 
-def extract_stage_titles(method_text: str) -> List[str]:
+def load_figure_spec(path: Optional[Path]) -> Dict:
+    if path is None or not path.exists():
+        return {}
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def extract_stage_titles(method_text: str, figure_spec: Optional[Dict] = None) -> List[str]:
+    if figure_spec:
+        stages = figure_spec.get("stages") or []
+        labels = [str(stage.get("title", "")).strip() for stage in stages if str(stage.get("title", "")).strip()]
+        if labels:
+            return labels[:3]
     titles = re.findall(r"Stage\s+\d+\s*:\s*(.+)", method_text)
     if titles:
         return [t.strip() for t in titles[:3]]
     numbered = re.findall(r"^\d+\.\s+([A-Za-z][^\n]+)$", method_text, flags=re.MULTILINE)
     if numbered:
         return [t.strip() for t in numbered[:3]]
-    return ["Diagnose", "Localize", "Align"]
+    return ["Stage 1", "Stage 2", "Stage 3"]
 
 
 def extract_stage_bullets(method_text: str) -> Dict[str, List[str]]:
@@ -301,6 +313,7 @@ def render_svg(
     width: int,
     height: int,
     icon_infos: List[IconInfo],
+    figure_spec: Optional[Dict] = None,
 ) -> str:
     stage_bullets = extract_stage_bullets(method_text)
 
@@ -511,12 +524,14 @@ def main() -> int:
     parser.add_argument("--boxlib_path", required=True)
     parser.add_argument("--output_path", required=True)
     parser.add_argument("--icon_infos_path")
+    parser.add_argument("--figure_spec_json")
     args = parser.parse_args()
 
     method_text = Path(args.method_file).read_text(encoding="utf-8")
+    figure_spec = load_figure_spec(Path(args.figure_spec_json)) if args.figure_spec_json else {}
     width, height = load_boxlib(Path(args.boxlib_path))
-    title = extract_title(method_text)
-    stage_titles = extract_stage_titles(method_text)
+    title = str(figure_spec.get("title", "")).strip() or extract_title(method_text)
+    stage_titles = extract_stage_titles(method_text, figure_spec)
     while len(stage_titles) < 3:
         stage_titles.append(f"Stage {len(stage_titles) + 1}")
 
@@ -529,7 +544,13 @@ def main() -> int:
         width=width,
         height=height,
         icon_infos=filtered,
+        figure_spec=figure_spec,
     )
+
+    forbidden_terms = [str(x) for x in figure_spec.get("forbidden_terms", []) if str(x).strip()]
+    for term in forbidden_terms:
+        if term and term in svg:
+            svg = svg.replace(term, "")
 
     output_path = Path(args.output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)

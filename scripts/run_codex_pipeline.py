@@ -49,6 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--svg_backend", choices=["codex_local", "llm"], default=os.environ.get("AUTOFIGURE_DEFAULT_SVG_BACKEND", "codex_local"))
     parser.add_argument("--use_reference_image", action="store_true")
     parser.add_argument("--reference_image_path", default=None)
+    parser.add_argument("--figure_spec_json", default=None, help="Project-specific figure spec JSON")
     return parser.parse_args()
 
 
@@ -112,6 +113,7 @@ def build_local_template(
     boxlib_path: Path,
     icon_infos: list[dict[str, Any]],
     output_path: Path,
+    figure_spec_json: Optional[str] = None,
 ) -> None:
     icon_infos_path = output_path.parent / "selected_icon_infos.json"
     icon_infos_path.write_text(json.dumps(icon_infos, indent=2, ensure_ascii=False), encoding="utf-8")
@@ -128,7 +130,7 @@ def build_local_template(
             str(icon_infos_path),
             "--output_path",
             str(output_path),
-        ],
+        ] + (["--figure_spec_json", figure_spec_json] if figure_spec_json else []),
         check=True,
     )
 
@@ -275,6 +277,7 @@ def main() -> int:
         boxlib_path=Path(boxlib_path),
         icon_infos=selected_icon_infos,
         output_path=template_svg_path,
+        figure_spec_json=args.figure_spec_json,
     )
 
     with template_svg_path.open("r", encoding="utf-8") as f:

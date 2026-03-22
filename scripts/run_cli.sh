@@ -57,6 +57,7 @@ has_sam_backend=0
 has_base_url=0
 has_image_model=0
 has_svg_model=0
+has_figure_spec=0
 for arg in "${extra_args[@]}"; do
   if [ "$arg" = "--sam_backend" ]; then
     has_sam_backend=1
@@ -66,6 +67,8 @@ for arg in "${extra_args[@]}"; do
     has_image_model=1
   elif [ "$arg" = "--svg_model" ]; then
     has_svg_model=1
+  elif [ "$arg" = "--figure_spec_json" ]; then
+    has_figure_spec=1
   fi
 done
 
